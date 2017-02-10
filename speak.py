@@ -37,13 +37,32 @@ from gtts import gTTS
 class speaknow(appapi.AppDaemon):
 
   def initialize(self):
+    if "device" in self.args:
+      self.device=self.args["device"]
+    else:
+      self.device="local"
+    self.log("using device {} for my voice".format(self.device))
     self.filelist = {"1":["empty"],"2":["empty"],"3":["empty"],"4":["empty"],"5":["empty"]}
     self.run_in(self.check_soundlist,2)
     self.listen_event(self.handle_speak_event,"SPEAK_EVENT")              # listen for a SPEAK_EVENT
-
+    
   def handle_speak_event(self, event_name, data, kwargs):
     self.log("handling speak event {} text={} language={}  priority={}".format(event_name,data["text"],data["language"],data["priority"]),"INFO")
-    self.say(data["text"],data["language"],data["priority"])              # Say it
+    self.addToList(data["text"],data["language"],data["priority"])              # Add it to priority list for processing 
+
+  #################################
+  # Generate mp3 file and add it to the priority list
+  #################################
+  def addToList(self,text,lang,priority):
+    if str(priority) in self.filelist:                                      # Do we have a valid priority
+      with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as f:   # generate a temp filename
+        fname = f.name
+      tts = gTTS(text=text, lang=lang)                                      # generate mp3 file
+      tts.save(fname)
+      self.filelist[str(priority)].append(fname)                            # add file to priority list
+    else:
+      self.log("invalid priority {}".format(priority))
+
 
   ##################################
   # schedule callback to see if anything is in our list to say
@@ -56,26 +75,13 @@ class speaknow(appapi.AppDaemon):
           self.play(file)
           priorityfilelist.remove(file)
           os.remove(file)
-    self.run_in(self.check_soundlist,2)                                   # Reschedule another check
+    self.run_in(self.check_soundlist,2)                                   # Reschedule another check. do this here so multiple messages don't step on each other
     
-  #################################
-  # Generate mp3 file and add it to the priority list
-  #################################
-  def say(self,text,lang,priority):
-    if str(priority) in self.filelist:                                      # Do we have a valid priority
-      with tempfile.NamedTemporaryFile(suffix='.mp3', delete=False) as f:   # generate a temp filename
-        fname = f.name
-      tts = gTTS(text=text, lang=lang)                                      # generate mp3 file
-      tts.save(fname)
-      self.filelist[str(priority)].append(fname)                            # add file to priority list
-    else:
-      self.log("invalid priority {}".format(priority))
-
   ########################
   #  Send file to omxplayer over local speaker
   ########################
   def play(self,filename):
-    cmd = ['omxplayer','-o','local',filename]                               # use omxplayer to play sound
+    cmd = ['omxplayer','-o',self.device,filename]                               # use omxplayer to play sound
     with tempfile.TemporaryFile() as f:
         subprocess.call(cmd, stdout=f, stderr=f)
         f.seek(0)
