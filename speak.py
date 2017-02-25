@@ -27,14 +27,14 @@
 #
 ###################
 
-import appdaemon.appapi as appapi
+import my_appapi as appapi
 import datetime
 import tempfile
 import subprocess
 import os
 from gtts import gTTS
 
-class speaknow(appapi.AppDaemon):
+class speaknow(appapi.my_appapi):
 
   def initialize(self):
     if "device" in self.args:
