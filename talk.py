@@ -1,6 +1,8 @@
-import appdaemon.appapi as appapi
+import appdaemon.plugins.hass.hassapi as hass
+#import appdaemon.appapi as appapi
             
-class talk(appapi.AppDaemon):
+class talk(hass.Hass):
+    #appapi.AppDaemon):
 
   def initialize(self):
     self.log("about to fire SPEAK event")
@@ -11,4 +13,5 @@ class talk(appapi.AppDaemon):
     lang = "en"
     #speaktext= "ahlexa, Turn on den fan light"
     speaktext="I am alive   !!!"
-    self.fire_event("SPEAK_EVENT",text=speaktext, priority=priority,language=lang)
+    media_player="media_player.office"
+    self.fire_event("SPEAK_EVENT",message=speaktext, media_player=media_player)
