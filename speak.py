@@ -34,26 +34,24 @@ import tempfile
 #import subprocess
 import os
 import pygame
-from gtts import gTTS
+#from gtts import gTTS
 
 class speaknow(hass.Hass):
 
   def initialize(self):
-    pygame.init()
-    if "device" in self.args:
-      self.device=self.args["device"]
-    else:
-      self.device="local"
-    self.log("using device {} for my voice".format(self.device))
-    self.filelist = {"1":["empty"],"2":["empty"],"3":["empty"],"4":["empty"],"5":["empty"]}
     self.log("listening for SPEAK_EVENT")
     self.listen_event(self.handle_speak_event,"SPEAK_EVENT")              # listen for a SPEAK_EVENT
+    self.player_list=self.args["device"]
     self.play("media_player.office","Initializing Speak")
     self.log("initialization complete")
 
   def handle_speak_event(self, event_name, data, kwargs):
     self.log("handling speak event {} media_player={} message={}".format(event_name,data["media_player"],data["message"]),"INFO")
-    self.play(data["media_player"],data["message"])              # Add it to priority list for processing 
+    if data["media_player"]=="all":
+      for mp in self.player_list:
+        self.play(self.player_list[mp],data["message"])
+    else:
+      self.play(data["media_player"],data["message"])              # Add it to priority list for processing 
 
   ########################
   #  Send file to omxplayer over local speaker
@@ -61,30 +59,4 @@ class speaknow(hass.Hass):
   def play(self,player,mess):
       self.log("About to play {} on {}".format(mess,player))
       self.call_service("media_player/alexa_tts", entity_id=player, message=mess)
-#    pygame.mixer.music.load(filename)
-#    pygame.mixer.music.play(0)
-#    while pygame.mixer.music.get_busy() == True:
-#      continue
-#    cmd = "thiswontwork/usr/bin/omxplayer --no-osd -o local " + filename 
-#    self.log("cmd={}".format(cmd))
-#    options="--no-osd -o local"
-#    with tempfile.TemporaryFile() as f:
-#        result=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,shell=True, env=dict(os.environ), cwd="/usr/bin")
-#        self.log("result={}".format(result))
-#        f.seek(0)
-#        output = f.read()
-
-  ##### Set unix file permissions
-  def setfilemode(self,_in_file,_mode):
-    if len(_mode)<9:
-      self.log("mode must bein the format of 'rwxrwxrwx'")
-    else:
-      result=0
-      for val in _mode: 
-        if val in ("r","w","x"):
-          result=(result << 1) | 1
-        else:
-          result=result << 1
-      self.log("Setting file to mode {} binary {}".format(_mode,bin(result)))
-      os.chmod(_in_file,result)
 
