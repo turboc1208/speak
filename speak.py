@@ -46,12 +46,13 @@ class speaknow(hass.Hass):
     self.log("initialization complete")
 
   def handle_speak_event(self, event_name, data, kwargs):
-    self.log("handling speak event {} media_player={} message={}".format(event_name,data["media_player"],data["message"]),"INFO")
+    self.log("event_name={},data={}".format(event_name,data))
+    self.log("handling speak event {} media_player={} message={}".format(event_name,data["media_player"],data["text"]),"INFO")
     if data["media_player"]=="all":
       for mp in self.player_list:
-        self.play(self.player_list[mp],data["message"])
+        self.play(self.player_list[mp],data["text"])
     else:
-      self.play(data["media_player"],data["message"])              # Add it to priority list for processing 
+      self.play(data["media_player"],data["text"])              # Add it to priority list for processing 
 
   ########################
   #  Send file to omxplayer over local speaker

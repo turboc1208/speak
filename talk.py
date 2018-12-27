@@ -14,4 +14,4 @@ class talk(hass.Hass):
     #speaktext= "ahlexa, Turn on den fan light"
     speaktext="I am alive   !!!"
     media_player="media_player.office"
-    self.fire_event("SPEAK_EVENT",message=speaktext, media_player=media_player)
+    self.fire_event("SPEAK_EVENT",text=speaktext, media_player=media_player)
